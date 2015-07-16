@@ -8,12 +8,12 @@
 
 Namespace TopFloor\Cds;
 
-use Cds\CdsBreadcrumbsHelper;
 use Cds\CdsCategoryInfo;
 use Cds\CdsCommandCollection;
 use Cds\CdsCommands\CdsCommand;
 use Cds\CdsDependencyCollection;
-use Cds\CdsOutputHelper;
+use Cds\Helpers\CdsBreadcrumbsHelper;
+use Cds\Helpers\CdsOutputHelper;
 use Cds\UrlHandlers\DefaultUrlHandler;
 use TopFloor\Cds\RequestHandlers\CurlRequestHandler;
 use TopFloor\Cds\RequestHandlers\FsockopenRequestHandler;
@@ -154,7 +154,8 @@ class CdsService {
 	}
 
 	public function jsSettings() {
-		$settings = $this->getDependencies('settings');
+		$dependencies = $this->getDependencies();
+        $settings = $dependencies->settings();
 
 		$output = "window.TopFloor = window.TopFloor || {};\n";
 		$output .= "TopFloor.Cds = TopFloor.Cds || {};\n";

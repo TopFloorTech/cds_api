@@ -8,9 +8,6 @@
 
 namespace Cds\CdsCommands;
 
-
-use TopFloor\Cds\CdsService;
-
 class KeysCdsCommand extends CdsCommand {
 	public function initialize() {
 		$dependencies = $this->getDependencies();

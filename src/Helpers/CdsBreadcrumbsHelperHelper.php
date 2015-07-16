@@ -6,7 +6,7 @@
  * Time: 11:38 PM
  */
 
-namespace Cds;
+namespace Cds\Helpers;
 
 
 use TopFloor\Cds\CdsService;
@@ -20,7 +20,7 @@ class CdsBreadcrumbsHelper {
 	}
 
 	public function getCategoryBreadcrumbs($categoryId, $addCurrentCategory = true) {
-		$request = $this->service->categoryRequest($categoryId);
+		$request = $this->service->getCategoryInfo()->categoryRequest($categoryId);
 		$categoryInfo = $request->process();
 		$urlHandler = $this->service->getUrlHandler();
 

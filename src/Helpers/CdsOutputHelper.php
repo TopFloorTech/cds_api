@@ -4,9 +4,11 @@
  * User: Ben
  * Date: 7/16/2015
  * Time: 8:40 AM
+ *
+ * <!--suppress HtmlUnknownTarget -->
  */
 
-namespace Cds;
+namespace Cds\Helpers;
 
 
 use TopFloor\Cds\CdsService;
@@ -41,8 +43,12 @@ class CdsOutputHelper {
 		return sprintf($this->templates['searchSidebarJs']);
 	}
 
-	public function searchMainContainer($categoryId, $content = null, $id = 'cds-search-right-container', $class = 'cds-browse-container') {
-		if (is_null($content)) {
+	public function searchMainContainer($categoryId = null, $content = null, $id = 'cds-search-right-container', $class = 'cds-browse-container') {
+		if (is_null($categoryId)) {
+            $categoryId = $this->service->getCategoryInfo()->categoryId();
+        }
+
+        if (is_null($content)) {
 			$content = $this->breadcrumbs($categoryId);
 			$content .= $this->searchHeader($categoryId);
 			$categoryInfo = $this->service->getCategoryInfo()->categoryInfo($categoryId);
@@ -57,11 +63,21 @@ class CdsOutputHelper {
 		return sprintf($this->templates['searchMainContainer'], $id, $class, $content);
 	}
 
-	public function searchSidebarContainer($id = 'cds-search-left-container') {
-		return sprintf($this->templates['searchSidebarContainer'], $id);
+	public function searchSidebarContainer($id = 'cds-search-left-container', $content = '', $js = true) {
+        $output = sprintf($this->templates['searchSidebarContainer'], $id, $content);
+
+        if ($js) {
+            $output .= $this->searchSidebarJs();
+        }
+
+   		return $output;
 	}
 
-	public function browseList($categoryId, $class = 'cds-browse-list') {
+	public function browseList($categoryId = null, $class = 'cds-browse-list') {
+        if (is_null($categoryId)) {
+            $categoryId = $this->service->getCategoryInfo()->categoryId();
+        }
+
 		$categoryInfo = $this->service->getCategoryInfo()->categoryInfo($categoryId);
 		$urlHandler = $this->service->getUrlHandler();
 
@@ -94,7 +110,11 @@ class CdsOutputHelper {
 		return sprintf($this->templates['browseList'], $class, implode("\n", $items));
 	}
 
-	public function searchHeader($categoryId, $class = 'head') {
+	public function searchHeader($categoryId = null, $class = 'head') {
+        if (is_null($categoryId)) {
+            $categoryId = $this->service->getCategoryInfo()->categoryId();
+        }
+
 		$categoryInfo = $this->service->getCategoryInfo()->categoryInfo($categoryId);
 
 		$output = '';
@@ -104,7 +124,7 @@ class CdsOutputHelper {
 		}
 
 		if (!empty($categoryInfo['searchHeaderHTML'])) {
-			$output .= sprintf($this->template['categoryHeaderHtml'], $categoryInfo['searchHeaderHTML']);
+			$output .= sprintf($this->templates['categoryHeaderHtml'], $categoryInfo['searchHeaderHTML']);
 		}
 
 		if (!empty($categoryInfo['description'])) {
@@ -115,7 +135,7 @@ class CdsOutputHelper {
 			return '';
 		}
 
-		return sprintf($this->templates['searchHeaderContainer'], $output);
+		return sprintf($this->templates['searchHeaderContainer'], $class, $output);
 	}
 
 	public function __construct(CdsService $service) {
@@ -138,8 +158,12 @@ class CdsOutputHelper {
 		return sprintf($this->templates['productContainer'], $id, $loader);
 	}
 
-	public function breadcrumbs($categoryId, $class = 'cds-crumbs', $separator = '&gt;', $addCurrentCategory = true) {
-		$breadcrumbs = $this->service->getBreadcrumbsHelper()->getCategoryBreadcrumbs($categoryId, $addCurrentCategory);
+	public function breadcrumbs($categoryId = null, $class = 'cds-crumbs', $separator = '&gt;', $addCurrentCategory = true) {
+        if (is_null($categoryId)) {
+            $categoryId = $this->service->getCategoryInfo()->categoryId();
+        }
+
+        $breadcrumbs = $this->service->getBreadcrumbsHelper()->getCategoryBreadcrumbs($categoryId, $addCurrentCategory);
 
 		$items = array();
 

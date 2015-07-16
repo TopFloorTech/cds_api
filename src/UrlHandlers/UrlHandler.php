@@ -9,7 +9,15 @@
 namespace Cds\UrlHandlers;
 
 
+use TopFloor\Cds\CdsService;
+
 abstract class UrlHandler implements UrlHandlerInterface {
+	private $service;
+
+	public function __construct(CdsService $service) {
+		$this->service = $service;
+	}
+
 	public abstract function construct($parameters = array());
 
 	public abstract function deconstruct($url);

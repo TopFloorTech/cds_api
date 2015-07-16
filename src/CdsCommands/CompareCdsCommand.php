@@ -8,9 +8,6 @@
 
 namespace Cds\CdsCommands;
 
-
-use TopFloor\Cds\CdsService;
-
 class CompareCdsCommand extends CdsCommand {
 	public function initialize() {
 		$dependencies = $this->getDependencies();

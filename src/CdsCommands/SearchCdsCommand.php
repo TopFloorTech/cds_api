@@ -8,9 +8,6 @@
 
 namespace Cds\CdsCommands;
 
-
-use TopFloor\Cds\CdsService;
-
 class SearchCdsCommand extends CdsCommand {
 	protected function initialize() {
 		$host = htmlspecialchars($this->service->getHost());
@@ -19,7 +16,7 @@ class SearchCdsCommand extends CdsCommand {
 		$urlHandler = $this->service->getUrlHandler();
 		$categoryId = $this->service->getCategoryInfo()->categoryId();
 		$categoryInfo = $this->service->getCategoryInfo()->categoryInfo($categoryId);
-		$loadProducts = $this->loadProducts($categoryInfo);
+		$loadProducts = $this->service->getCategoryInfo()->loadProducts($categoryInfo);
 
 		$productUrlTemplate = $urlHandler->construct(array(
 			'page' => 'product',
