@@ -12,11 +12,14 @@ namespace Cds\CdsCommands;
 use TopFloor\Cds\CdsService;
 
 class SearchCdsCommand extends CdsCommand {
-	public function setDependencies() {
-		$dependencies = $this->getDependencies();
-
+	protected function initialize() {
 		$host = htmlspecialchars($this->service->getHost());
+
+		$dependencies = $this->getDependencies();
 		$urlHandler = $this->service->getUrlHandler();
+		$categoryId = $this->service->getCategoryInfo()->categoryId();
+		$categoryInfo = $this->service->getCategoryInfo()->categoryInfo($categoryId);
+		$loadProducts = $this->loadProducts($categoryInfo);
 
 		$productUrlTemplate = $urlHandler->construct(array(
 			'page' => 'product',
@@ -29,32 +32,36 @@ class SearchCdsCommand extends CdsCommand {
 			'cid' => '%CATEGORY%',
 		));
 
+		$comparePageUrl = $urlHandler->construct(array('page' => 'compare'));
+
 		$dependencies->js('http://' . $host . '/catalog3/js/cds-faceted-search2.js');
 
 		$dependencies->setting('Keys', array(
 			'productUrlTemplate' => $productUrlTemplate,
 			'searchUrlTemplate' => $searchUrlTemplate,
+			'comparePageUrl' => $comparePageUrl,
 			'containerId' => 'cds-keys-result',
 			'attributeLabel' => 'Attribute',
 			'valueLabel' => 'Value',
+			'compareMaxProducts' => 6,
 		));
-	}
 
-	public function execute($parameters = array()) {
-		$default = array(
-			'categoryId' => 'root',
+		$this->defaultParameters = array(
+			'categoryId' => $categoryId,
 			'displayPowerGrid' => true,
 			'renderProductsListType' => 'list',
 			'showUnitToggle' => false,
 			'appendUnitToProductUrl' => true,
-			'loadProducts' => '', // TODO: Write a class that loads products
+			'loadProducts' => $loadProducts,
 		);
+	}
 
-		$parameters += $default;
+	public function execute() {
+		$parameters = $this->getParameters();
 
 		$output = '';
 
-		$output .= 'TopFloor.Cds.Search.initialize(' . json_encode($parameters) . ');' . "\n";
+		$output .= "TopFloor.Cds.Search.initialize($parameters);\n";
 
 		return $output;
 	}

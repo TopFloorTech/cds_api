@@ -13,4 +13,10 @@ interface UrlHandlerInterface {
 	public function construct($parameters = array());
 
 	public function deconstruct($url);
+
+	public function get($parameter);
+
+	public function getCurrentUri();
+
+	public function parameterIsSet($parameter);
 }

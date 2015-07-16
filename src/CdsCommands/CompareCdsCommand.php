@@ -12,7 +12,7 @@ namespace Cds\CdsCommands;
 use TopFloor\Cds\CdsService;
 
 class CompareCdsCommand extends CdsCommand {
-	public function setDependencies() {
+	public function initialize() {
 		$dependencies = $this->getDependencies();
 
 		$urlHandler = $this->service->getUrlHandler();
@@ -29,7 +29,7 @@ class CompareCdsCommand extends CdsCommand {
 		));
 	}
 
-	public function execute($parameters = array()) {
+	public function execute() {
 		$output = '';
 
 		$output .= 'TopFloor.Cds.Compare.initialize();';

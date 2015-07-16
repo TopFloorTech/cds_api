@@ -42,7 +42,7 @@ class CdsRequest {
 		$this->parser = $parser;
 	}
 
-	public function send() {
+	public function process() {
 		$result = $this->handler->send($this);
 
 		return $result;

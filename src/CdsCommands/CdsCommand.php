@@ -16,14 +16,18 @@ abstract class CdsCommand implements CdsCommandInterface {
 
 	protected $dependencies;
 
+	protected $parameters = array();
+
+	protected $defaultParameters = array();
+
 	public function __construct(CdsService $service) {
 		$this->service = $service;
 		$this->dependencies = new CdsDependencyCollection();
 
-		$this->setDependencies();
+		$this->initialize();
 	}
 
-	protected function setDependencies() {
+	protected function initialize() {
 		// Override this if there are any dependencies to declare.
 	}
 
@@ -31,5 +35,19 @@ abstract class CdsCommand implements CdsCommandInterface {
 		return $this->dependencies;
 	}
 
-	public abstract function execute($parameters = array());
+	public function setParameters($parameters = array()) {
+		$this->parameters = $parameters;
+	}
+
+	public function getParameters($encode = false) {
+		$parameters = $this->parameters + $this->defaultParameters;
+
+		if ($encode) {
+			$parameters = json_encode($parameters);
+		}
+
+		return $parameters;
+	}
+
+	public abstract function execute();
 }

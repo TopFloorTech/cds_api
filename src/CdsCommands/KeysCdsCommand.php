@@ -12,7 +12,7 @@ namespace Cds\CdsCommands;
 use TopFloor\Cds\CdsService;
 
 class KeysCdsCommand extends CdsCommand {
-	public function setDependencies() {
+	public function initialize() {
 		$dependencies = $this->getDependencies();
 
 		$urlHandler = $this->service->getUrlHandler();
@@ -36,7 +36,7 @@ class KeysCdsCommand extends CdsCommand {
 		));
 	}
 
-	public function execute($parameters = array()) {
+	public function execute() {
 		$output = '';
 
 		$output .= 'TopFloor.Cds.Keys.initialize();';

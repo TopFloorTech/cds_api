@@ -75,7 +75,7 @@ TopFloor.Cds.Keys.initialize = function () {
 
 TopFloor.Cds.Search = {};
 TopFloor.Cds.Search.initialize = function (parameters) {
-    TopFloor.Cds.State.Search.categoryId = parameters.categoryId;
+    TopFloor.Cds.State.Search = parameters;
 
     defer.push({
         predicate: function () {
@@ -102,14 +102,30 @@ TopFloor.Cds.Search.initialize = function (parameters) {
                     cds.makeSameHeight(jQuery(".cds-browse-list").children());
                 }
             });
-
-
         }
     });
 };
 
 TopFloor.Cds.Search.sidebarBlock = function () {
-    cds.facetedSearch.searchUrlTemplate = TopFloor.Cds.Settings.Search.searchUrlTemplate;
-    cds.facetedSearch.productUrlTemplate = TopFloor.Cds.Settings.Search.productUrlTemplate;
-    cds.facetedSearch.categoryId = TopFloor.Cds.State.Search.categoryId;
+    defer.push({
+        predicate: function () {
+            return TopFloor.Cds.State.initialized
+                && typeof cds.facetedSearch !== 'undefined';
+        },
+        handler: function () {
+            cds.facetedSearch.searchURLTemplate = TopFloor.Cds.Settings.Search.searchUrlTemplate;
+            cds.facetedSearch.productURLTemplate = TopFloor.Cds.Settings.Search.productUrlTemplate;
+            cds.facetedSearch.categoryId = TopFloor.Cds.State.Search.categoryId;
+            cds.facetedSearch.displayPowerGrid = TopFloor.Cds.State.Search.displayPowerGrid;
+            cds.facetedSearch.renderProductsListType = TopFloor.Cds.State.Search.renderProductsListType;
+            cds.facetedSearch.showUnitToggle = TopFloor.Cds.State.Search.showUnitToggle;
+            cds.facetedSearch.appendUnitToProductURL = TopFloor.Cds.State.Search.appendUnitToProductURL;
+            cds.facetedSearch.loadProducts = TopFloor.Cds.State.Search.loadProducts;
+            cds.facetedSearch.init();
+
+            cds.facetedSearch.compareCart = new cds.ProductCompareCart();
+            cds.facetedSearch.compareCart.setComparePageURL(TopFloor.Cds.Settings.Search.comparePageUrl);
+            cds.facetedSearch.compareCart.setMaxProducts(6);
+        }
+    });
 };

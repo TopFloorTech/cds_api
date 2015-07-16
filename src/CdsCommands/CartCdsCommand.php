@@ -12,7 +12,7 @@ namespace Cds\CdsCommands;
 use TopFloor\Cds\CdsService;
 
 class CartCdsCommand extends CdsCommand {
-	public function setDependencies() {
+	public function initialize() {
 		$dependencies = $this->getDependencies();
 
 		$dependencies->setting('Cart', array(
@@ -20,7 +20,7 @@ class CartCdsCommand extends CdsCommand {
 		));
 	}
 
-	public function execute($parameters = array()) {
+	public function execute() {
 		$output = '';
 
 		$output .= 'TopFloor.Cds.Cart.initialize();';

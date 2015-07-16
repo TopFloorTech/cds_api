@@ -18,6 +18,12 @@ class CdsDependencyCollection {
 		'css' => array(),
 	);
 
+	public function __construct($dependencies = array()) {
+		foreach ($dependencies as $type => $typeDependencies) {
+			$this->dependencies[$type] = $typeDependencies;
+		}
+	}
+
 	public function getDependencies($type = null) {
 		if ($type == null) {
 			return $this->dependencies;
@@ -60,5 +66,17 @@ class CdsDependencyCollection {
 
 	public function setting($key, $value) {
 		$this->setDependency('setting', $key, $value);
+	}
+
+	public function addDependencies($dependencies) {
+		foreach ($dependencies as $type => $typeDependencies) {
+			foreach ($typeDependencies as $key => $value) {
+				if ($type = 'setting') {
+						$this->setting($key, $value);
+				} else {
+						$this->setDependency($type, $value);
+				}
+			}
+		}
 	}
 }

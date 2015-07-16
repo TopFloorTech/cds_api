@@ -10,7 +10,11 @@ namespace Cds\CdsCommands;
 
 
 interface CdsCommandInterface {
-	public function execute($parameters = array());
+	public function execute();
+
+	public function setParameters($parameters = array());
+
+	public function getParameters($encode = false);
 
 	public function getDependencies();
 }

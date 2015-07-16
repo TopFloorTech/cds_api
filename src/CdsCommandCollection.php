@@ -36,32 +36,16 @@ class CdsCommandCollection {
 		return $output;
 	}
 
-	public function getDependencies($type = null) {
-		$dependencies = array(
-			'options' => array(),
-			'js' => array(),
-			'css' => array(),
-		);
+	public function getDependencies() {
+		$dependencies = new CdsDependencyCollection();
 
 		/** @var CdsCommand $command */
 		foreach ($this->commands as $command) {
-			foreach ($command->getDependencies() as $type => $typeDependencies) {
-				foreach ($typeDependencies as $key => $typeDependency) {
-					if ($type == 'settings') {
-						$dependencies['settings'][$key] = $typeDependency;
-					} else {
-						if (!in_array($typeDependency, $dependencies[$type])) {
-							$dependencies[$type][] = $typeDependency;
-						}
-					}
-				}
+			foreach ($command->getDependencies() as $commandDependencies) {
+				$dependencies->addDependencies($commandDependencies);
 			}
 		}
 
-		if (is_null($type)) {
-			return $dependencies;
-		}
-
-		return $dependencies[$type];
+		return $dependencies;
 	}
 }
