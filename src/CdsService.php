@@ -43,18 +43,14 @@ class CdsService {
 		$this->output = new CdsOutputHelper($this);
 		$this->categoryInfo = new CdsCategoryInfo($this);
 
-		$host = htmlspecialchars($this->getHost());
-
-		$baseUrl = 'http://' . $host . '/catalog3';
-
 		$this->dependencies = new CdsDependencyCollection(array(
-			'js' => array('cds-catalog' => $baseUrl . '/js/cds-catalog-min.js',),
-			'css' => array('cds-catalog' => $baseUrl . '/css/catalog-3.1.css',),
+			'js' => array('cds-catalog' => $this->baseUrl() . '/js/cds-catalog-min.js',),
+			'css' => array('cds-catalog' => $this->baseUrl() . '/css/catalog-3.1.css',),
 			'settings' => array(
 				'host' => $this->getHost(),
 				'domain' => $this->getDomain(),
 				'unitSystem' => $this->getUnitSystem(),
-				'baseUrl' => $baseUrl,
+				'baseUrl' => $this->baseUrl(),
 			),
 		));
 
@@ -65,6 +61,12 @@ class CdsService {
 			$this->requestHandler = new FsockopenRequestHandler($this);
 		}
 	}
+
+    public function baseUrl() {
+        $host = htmlspecialchars($this->getHost());
+
+        return 'http://' . $host . '/catalog3';
+    }
 
 	public function getHost() {
 		return $this->host;
