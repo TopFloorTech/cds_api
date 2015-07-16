@@ -38,7 +38,7 @@ class CdsService {
 		$this->domain = $domain;
 		$this->responseParser = new JsonResponseParser();
 		$this->commands = new CdsCommandCollection();
-		$this->urlHandler = new DefaultUrlHandler();
+		$this->urlHandler = new DefaultUrlHandler($this);
 		$this->breadcrumbs = new CdsBreadcrumbsHelper($this);
 		$this->output = new CdsOutputHelper($this);
 		$this->categoryInfo = new CdsCategoryInfo($this);
