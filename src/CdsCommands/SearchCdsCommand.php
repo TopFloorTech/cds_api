@@ -31,7 +31,7 @@ class SearchCdsCommand extends CdsCommand {
 
 		$comparePageUrl = $urlHandler->construct(array('page' => 'compare'));
 
-		$dependencies->js('http://' . $host . '/catalog3/js/cds-faceted-search2.js');
+		$dependencies->js('cds-faceted-search', 'http://' . $host . '/catalog3/js/cds-faceted-search2.js');
 
 		$dependencies->setting('Keys', array(
 			'productUrlTemplate' => $productUrlTemplate,

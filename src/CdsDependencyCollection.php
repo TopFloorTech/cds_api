@@ -36,7 +36,7 @@ class CdsDependencyCollection {
 		return $this->dependencies[$type];
 	}
 
-	public function setDependency($type, $index, $value = null) {
+	public function setDependency($type, $index, $value) {
 		if (is_null($value)) {
 			$this->dependencies[$type][] = $index;
 		} else {
@@ -44,20 +44,20 @@ class CdsDependencyCollection {
 		}
 	}
 
-	public function js($path = null) {
+	public function js($id = null, $path = null) {
 		if (is_null($path)) {
 			return $this->getDependencies('js');
 		}
 
-		$this->setDependency('js', $path);
+		$this->setDependency('js', $id, $path);
 	}
 
-	public function css($path = null) {
+	public function css($id = null, $path = null) {
 		if (is_null($path)) {
 			return $this->getDependencies('css');
 		}
 
-		$this->setDependency('css', $path);
+		$this->setDependency('css', $id, $path);
 	}
 
 	public function settings() {
@@ -71,11 +71,7 @@ class CdsDependencyCollection {
 	public function addDependencies($dependencies) {
 		foreach ($dependencies as $type => $typeDependencies) {
 			foreach ($typeDependencies as $key => $value) {
-				if ($type = 'setting') {
-						$this->setting($key, $value);
-				} else {
-						$this->setDependency($type, $value);
-				}
+				$this->setDependency($type, $key, $value);
 			}
 		}
 	}

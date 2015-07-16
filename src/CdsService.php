@@ -48,14 +48,14 @@ class CdsService {
 		$baseUrl = 'http://' . $host . '/catalog3';
 
 		$this->dependencies = new CdsDependencyCollection(array(
-			'js' => array($baseUrl . '/js/cds-catalog-min.js'),
-			'css' => array($baseUrl . '/css/catalog-3.1.css'),
+			'js' => array('cds-catalog' => $baseUrl . '/js/cds-catalog-min.js',),
+			'css' => array('cds-catalog' => $baseUrl . '/css/catalog-3.1.css',),
 			'settings' => array(
 				'host' => $this->getHost(),
 				'domain' => $this->getDomain(),
 				'unitSystem' => $this->getUnitSystem(),
 				'baseUrl' => $baseUrl,
-			)
+			),
 		));
 
 		// Use cURL if it is available, or fall back to Fsockopen
