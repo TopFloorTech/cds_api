@@ -194,7 +194,8 @@ class CdsService {
 			throw new CdsServiceException('Requested command slug "' . $slug . '" is not available.');
 		}
 
-		$command = new $availableCommands[$slug];
+		/** @var CdsCommand $command */
+		$command = new $availableCommands[$slug]($this);
 
 		return $command;
 	}
