@@ -18,7 +18,38 @@ class CdsBreadcrumbsHelper {
 		$this->service = $service;
 	}
 
-	public function getCategoryBreadcrumbs($categoryId, $addCurrentCategory = true) {
+	public function getBreadcrumbs() {
+		$page = $this->service->getPage();
+
+		if (empty($page)) {
+			return array();
+		}
+
+		$urlHandler = $this->service->getUrlHandler();
+
+		if ($page == 'product') {
+			return $this->getProductBreadcrumbs($urlHandler->get('id'), $urlHandler->get('cid'));
+		} else {
+			return $this->getCategoryBreadcrumbs($urlHandler->get('cid'));
+		}
+	}
+
+	public function getProductBreadcrumbs($productId, $categoryId, $addProduct = true) {
+		$breadcrumbs = $this->getCategoryBreadcrumbs($categoryId, true, true);
+
+		$productInfo = $this->service->getProductInfo()->productInfo($productId, $categoryId);
+
+		if ($addProduct) {
+			$breadcrumbs[] = array(
+				'url' => '',
+				'label' => $productInfo['label'],
+			);
+		}
+
+		return $breadcrumbs;
+	}
+
+	public function getCategoryBreadcrumbs($categoryId, $addCurrentCategory = true, $linkCurrentCategory = false) {
 		$request = $this->service->getCategoryInfo()->categoryRequest($categoryId);
 		$categoryInfo = $request->process();
 		$urlHandler = $this->service->getUrlHandler();
@@ -42,8 +73,17 @@ class CdsBreadcrumbsHelper {
 		}
 
 		if ($addCurrentCategory) {
+			$url = '';
+
+			if ($linkCurrentCategory) {
+				$url = $urlHandler->construct(array(
+					'page' => 'search',
+					'cid' => urlencode($categoryId)
+				));
+			}
+
             $breadcrumbs[] = array(
-                'url' => null,
+                'url' => $url,
                 'label' => $categoryInfo['label'],
             );
 		}

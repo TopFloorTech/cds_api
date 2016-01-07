@@ -11,14 +11,14 @@ namespace TopFloor\Cds\UrlHandlers;
 class DefaultUrlHandler extends UrlHandler {
 	protected $defaultPage = 'search';
 
-	public function construct($parameters = array()) {
+	public function construct($parameters = array(), $append = '') {
 		$url = '';
 
 		foreach ($parameters as $key => $value) {
 			$url .= '&' . urlencode($key) . '=' . urlencode($value);
 		}
 
-		return $url;
+		return $url . $append;
 	}
 
 	public function deconstruct($url) {
@@ -31,11 +31,25 @@ class DefaultUrlHandler extends UrlHandler {
 
 	public function getPageFromUri($uri = null, $basePath = null)
 	{
-		// TODO: Implement getPageFromUri() method.
+		if (!is_null($basePath)) {
+			$uri = substr($uri, 0, strlen($basePath) + 1);
+		}
+
+		$params = $this->deconstruct($uri);
+
+		if (isset($params['page'])) {
+			return $params['page'];
+		}
+
+		return '';
 	}
 
 	public function getUriForPage($page, $basePath = null)
 	{
-		// TODO: Implement getUriForPage() method.
+		$uri = $this->construct(array('page' => $page));
+
+		$uri = $basePath . $uri;
+
+		return $uri;
 	}
 }

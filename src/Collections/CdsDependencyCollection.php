@@ -6,7 +6,7 @@
  * Time: 4:40 PM
  */
 
-namespace TopFloor\Cds;
+namespace TopFloor\Cds\Collections;
 
 class CdsDependencyCollection {
 	private $dependencies = array(
@@ -42,19 +42,19 @@ class CdsDependencyCollection {
 	}
 
 	public function js($id = null, $path = null) {
-		if (is_null($path)) {
-			return $this->getDependencies('js');
+		if (!is_null($path)) {
+			$this->setDependency('js', $id, $path);
 		}
 
-		$this->setDependency('js', $id, $path);
+		return $this->getDependencies('js');
 	}
 
 	public function css($id = null, $path = null) {
-		if (is_null($path)) {
-			return $this->getDependencies('css');
+		if (!is_null($path)) {
+			$this->setDependency('css', $id, $path);
 		}
 
-		$this->setDependency('css', $id, $path);
+		return $this->getDependencies('css');
 	}
 
 	public function settings() {

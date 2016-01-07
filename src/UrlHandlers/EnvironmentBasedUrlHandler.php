@@ -10,11 +10,11 @@ namespace TopFloor\Cds\UrlHandlers;
 
 abstract class EnvironmentBasedUrlHandler extends PrettyUrlHandler
 {
-    public function construct($parameters = array())
+    public function construct($parameters = array(), $append = '', $baseUri = null)
     {
         $parameters = $this->buildParameters($parameters);
 
-        $url = $this->getUriForPage($parameters['page']);
+        $url = $this->getUriForPage($parameters['page'], $baseUri);
 
         if (!empty($parameters['cid'])) {
             $url .= '/' . $parameters['cid'];
@@ -24,28 +24,26 @@ abstract class EnvironmentBasedUrlHandler extends PrettyUrlHandler
             $url .= '/' . $parameters['id'];
         }
 
-        return $url;
+        return $url . $append;
     }
 
-    public function deconstruct($url)
+    public function deconstruct($url, $basePath = null)
     {
         if (substr($url, 0, 1) == '/') {
             $url = substr($url, 1);
         }
 
-        $basePath = false;
+        if (is_null($basePath)) {
+            $basePath = false;
 
-        foreach ($this->getEnvironments() as $envBasePath => $envCategoryId) {
-            if ($url == $envBasePath || $url == $envBasePath . '/') {
-                $basePath = $envBasePath;
+            foreach ($this->getEnvironments() as $envBasePath => $envCategoryId) {
+                if ($url == $envBasePath
+                  || $url == $envBasePath . '/'
+                  || preg_match('|^' . $envBasePath . '/|', $url) !== false) {
+                    $basePath = $envBasePath;
 
-                break;
-            }
-
-            if (preg_match('|^' . $envBasePath . '/|', $url) !== false) {
-                $basePath = $envBasePath;
-
-                break;
+                    break;
+                }
             }
         }
 
@@ -55,8 +53,16 @@ abstract class EnvironmentBasedUrlHandler extends PrettyUrlHandler
             $parameters['page'] = $this->getPageFromUri($url, $basePath);
             $parameters['cid'] = $this->getBaseCategoryId($basePath);
 
+            // Remove base path from URL
             $url = substr($url, strlen($basePath));
 
+            // Remove query string from URL
+            $queryPos = strpos($url, '?');
+            if ($queryPos !== false) {
+                $url = substr($url, 0, $queryPos);
+            }
+
+            // Remove leading and trailing slashes from URL
             if (substr($url, 0, 1) == '/') {
                 $url = substr($url, 1);
             }
@@ -68,7 +74,7 @@ abstract class EnvironmentBasedUrlHandler extends PrettyUrlHandler
             $pathParts = explode('/', $url);
 
             if (count($pathParts) > 0) {
-                if ($pathParts[0] == $parameters['page']) {
+                if (array_search($pathParts[0], $this->pagePrefixes)) {
                     array_shift($pathParts);
                 }
             }
@@ -88,8 +94,12 @@ abstract class EnvironmentBasedUrlHandler extends PrettyUrlHandler
     protected abstract function getEnvironments();
 
     public function getPageFromUri($uri = null, $baseUri = null) {
-        if (is_null($baseUri)) {
+        if (empty($baseUri)) {
             $baseUri = $this->getCurrentEnvironment();
+
+            if (empty($baseUri)) {
+                return '';
+            }
         }
 
         return parent::getPageFromUri($uri, $baseUri);
@@ -121,18 +131,22 @@ abstract class EnvironmentBasedUrlHandler extends PrettyUrlHandler
     {
         $requestUri = $this->getCurrentUri();
 
-        if ($requestUri == '/' . $basePath) {
+        if (substr($requestUri, 0, 1) == '/') {
+            $requestUri = substr($requestUri, 1);
+        }
+
+        if ($requestUri == $basePath) {
             return true;
         }
 
-        if ($requestUri == '/' . $basePath . '/') {
+        if ($requestUri == $basePath . '/') {
             return true;
         }
 
-        return (preg_match('|^/' . $basePath . '/|', $requestUri) !== false);
+        return (preg_match('|^' . $basePath . '\/|', $requestUri));
     }
 
-    protected function getCurrentEnvironment()
+    public function getCurrentEnvironment()
     {
         foreach ($this->getEnvironments() as $basePath => $categoryId) {
             if ($this->environmentIsActive($basePath)) {
@@ -141,6 +155,24 @@ abstract class EnvironmentBasedUrlHandler extends PrettyUrlHandler
         }
 
         return false;
+    }
+
+    public function getEnvironmentUri() {
+        $uri = parent::getCurrentUri();
+
+        $environment = $this->getCurrentEnvironment();
+
+        if (!$environment || $uri == $environment || strlen($environment) >= strlen($uri)) {
+            return '';
+        }
+
+        $uri = substr($uri, strlen($environment) + 1);
+
+        if (substr($uri, 0, 1) == '/') {
+            $uri = substr($uri, 1);
+        }
+
+        return $uri;
     }
 
     protected function getBaseCategoryId($uri = null)

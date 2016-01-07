@@ -8,49 +8,79 @@
 
 namespace TopFloor\Cds;
 
-use TopFloor\Cds\CdsCommands\CdsCommand;
+use TopFloor\Cds\CdsComponents\CdsComponent;
+use TopFloor\Cds\CdsPages\CdsPage;
+use TopFloor\Cds\CdsPages\CdsPageInterface;
+use TopFloor\Cds\CdsRenderers\CdsRendererInterface;
+use TopFloor\Cds\CdsRenderers\TwigCdsRenderer;
+use TopFloor\Cds\Collections\CdsComponentCollection;
+use TopFloor\Cds\Collections\CdsDependencyCollection;
 use TopFloor\Cds\Exceptions\CdsServiceException;
 use TopFloor\Cds\Helpers\CdsBreadcrumbsHelper;
-use TopFloor\Cds\Helpers\CdsOutputHelper;
 use TopFloor\Cds\UrlHandlers\DefaultUrlHandler;
 use TopFloor\Cds\RequestHandlers\CurlRequestHandler;
 use TopFloor\Cds\RequestHandlers\FsockopenRequestHandler;
 use TopFloor\Cds\RequestHandlers\RequestHandler;
 use TopFloor\Cds\ResponseParsers\JsonResponseParser;
 use TopFloor\Cds\ResponseParsers\ResponseParser;
+use TopFloor\Cds\UrlHandlers\EnvironmentBasedUrlHandler;
 
 class CdsService {
 	private $host;
 	private $domain;
 	private $unitSystem = 'english';
+
+	private $availablePages = array(
+		'cart' => 'TopFloor\Cds\CdsPages\CartCdsPage',
+		'compare' => 'TopFloor\Cds\CdsPages\CompareCdsPage',
+		'keys' => 'TopFloor\Cds\CdsPages\KeysCdsPage',
+		'product' => 'TopFloor\Cds\CdsPages\ProductCdsPage',
+		'search' => 'TopFloor\Cds\CdsPages\SearchCdsPage',
+	);
+
+	/** @var CdsPage $page */
+	private $page;
 	private $responseParser;
 	private $requestHandler;
-	private $commands;
 	private $urlHandler;
 	private $breadcrumbs;
+    private $useRfqCart = true;
 	private $dependencies;
 	private $categoryInfo;
-	private $availableCommands = array(
-		'cart' => 'TopFloor\Cds\CdsCommands\CartCdsCommand',
-		'compare' => 'TopFloor\Cds\CdsCommands\CompareCdsCommand',
-		'keys' => 'TopFloor\Cds\CdsCommands\KeysCdsCommand',
-		'products' => 'TopFloor\Cds\CdsCommands\ProductsCdsCommand',
-		'search' => 'TopFloor\Cds\CdsCommands\SearchCdsCommand',
-	);
+    private $productInfo;
+	private $renderer;
+	private $viewsDir;
+	private $components;
 
 	public function __construct($host, $domain) {
 		$this->host = $host;
 		$this->domain = $domain;
+		$this->viewsDir = dirname(dirname(__FILE__)) . '/views';
 		$this->responseParser = new JsonResponseParser();
-		$this->commands = new CdsCommandCollection();
 		$this->urlHandler = new DefaultUrlHandler($this);
 		$this->breadcrumbs = new CdsBreadcrumbsHelper($this);
-		$this->output = new CdsOutputHelper($this);
 		$this->categoryInfo = new CdsCategoryInfo($this);
+        $this->productInfo = new CdsProductInfo($this);
+		$this->renderer = new TwigCdsRenderer($this);
+		$this->components = new CdsComponentCollection();
+
+		// try to get unit system from request then cookie
+		if (isset($_REQUEST['unit'])) {
+			$this->unitSystem = $_REQUEST['unit'];
+		} else if (isset($_COOKIE['cds_catalog_unit'])) {
+			$this->unitSystem = $_COOKIE['cds_catalog_unit'];
+		}
+		setcookie('cds.catalog.unit', $this->unitSystem, time() + (86400 * 365));
 
 		$this->dependencies = new CdsDependencyCollection(array(
-			'js' => array('cds-catalog' => $this->baseUrl() . '/js/cds-catalog-min.js',),
-			'css' => array('cds-catalog' => $this->baseUrl() . '/css/catalog-3.1.css',),
+			'js' => array(
+				'cds-catalog' => $this->baseUrl() . '/js/cds-catalog-min.js',
+				'custom-cds-js' => $this->baseUrl() . '/d/' . $this->domain . '/cds.js',
+				'cds-api' => 'cds-api.js',
+			),
+			'css' => array(
+				'cds-catalog' => $this->baseUrl() . '/css/catalog-3.1.css',
+			),
 			'settings' => array(
 				'host' => $this->getHost(),
 				'domain' => $this->getDomain(),
@@ -67,12 +97,24 @@ class CdsService {
 		}
 	}
 
-	public function getAvailableCommands() {
-		return $this->availableCommands;
+	public function getRenderer() {
+		return $this->renderer;
 	}
 
-	public function addAvailableCommand($slug, $class) {
-		$this->availableCommands[$slug] = $class;
+	public function setRenderer(CdsRendererInterface $renderer) {
+		$this->renderer = $renderer;
+	}
+
+	public function getViewsDir() {
+		return $this->viewsDir;
+	}
+
+	public function getAvailablePages() {
+		return $this->availablePages;
+	}
+
+	public function addAvailablePage($slug, $class) {
+		$this->availablePages[$slug] = $class;
 	}
 
     public function baseUrl() {
@@ -89,10 +131,29 @@ class CdsService {
 		return $this->domain;
 	}
 
+    public function useRfqCart($useRfqCart = null) {
+        if (!is_null($useRfqCart)) {
+            $this->useRfqCart = ($useRfqCart);
+        }
+
+        return $this->useRfqCart;
+    }
+
+    public function getPage() {
+        return $this->page;
+    }
+
 	public function getCategoryInfo() {
 		return $this->categoryInfo;
 	}
 
+	public function getProductInfo() {
+        return $this->productInfo;
+    }
+
+	/**
+	 * @return EnvironmentBasedUrlHandler
+	 */
 	public function getUrlHandler() {
 		return $this->urlHandler;
 	}
@@ -103,14 +164,6 @@ class CdsService {
 
 	public function setBreadcrumbsHelper(CdsBreadcrumbsHelper $breadcrumbsHelper) {
 		$this->breadcrumbs = $breadcrumbsHelper;
-	}
-
-	public function getOutputHelper() {
-		return $this->output;
-	}
-
-	public function setOutputHelper($outputHelper) {
-		$this->output = $outputHelper;
 	}
 
 	public function setUrlHandler($urlHandler) {
@@ -155,19 +208,6 @@ class CdsService {
 		return $request;
 	}
 
-	public function productRequest($id, $category = null) {
-		$resourceTemplate = '/catalog3/service?o=product&d=%s&id=%s&unit=%s';
-		$categoryTemplate = '&cid=%s';
-
-		$resource = sprintf($resourceTemplate, $this->getDomain(), $id, $this->getUnitSystem());
-
-		if (!is_null($category)) {
-			$resource .= sprintf($categoryTemplate, $category);
-		}
-
-		return $this->request($resource);
-	}
-
 	public function jsSettings() {
 		$dependencies = $this->getDependencies();
         $settings = $dependencies->settings();
@@ -181,27 +221,39 @@ class CdsService {
 
 	public function getDependencies() {
 		$dependencies = new CdsDependencyCollection();
+
 		$dependencies->addDependencies($this->dependencies->getDependencies());
-		$dependencies->addDependencies($this->commands->getDependencies()->getDependencies());
+
+		$dependencies->addDependencies($this->components->getDependencies()->getDependencies());
+
+		if (!empty($this->page)) {
+			$dependencies->addDependencies($this->page->getDependencies()->getDependencies());
+		}
 
 		return $dependencies;
 	}
 
-	public function createCommand($slug) {
-		$availableCommands = $this->getAvailableCommands();
+	public function createPage($slug) {
+		$availablePages = $this->getAvailablePages();
 
-		if (empty($availableCommands[$slug]) || !class_exists($availableCommands[$slug])) {
-			throw new CdsServiceException('Requested command slug "' . $slug . '" is not available.');
+		if (empty($availablePages[$slug]) || !class_exists('\\' . $availablePages[$slug])) {
+			throw new CdsServiceException('Requested page slug "' . $slug . '" is not available.');
 		}
 
-		/** @var CdsCommand $command */
-		$command = new $availableCommands[$slug]($this);
+        $pageName = $availablePages[$slug];
 
-		return $command;
+		/** @var CdsPageInterface $page */
+		$page = new $pageName($this);
+
+		return $page;
 	}
 
-	public function command(CdsCommand $command) {
-		$this->commands->addCommand($command);
+	public function setPage(CdsPageInterface $page) {
+		$this->page = $page;
+	}
+
+	public function addComponent(CdsComponent $component) {
+		$this->components->addComponent($component);
 	}
 
 	/**
@@ -210,12 +262,53 @@ class CdsService {
 	 * @return string
 	 */
 	public function execute() {
-		$output = '';
+		$template = 'jQuery(document).ready(function () { %s });';
 
-		$output .= 'TopFloor.Cds.initialize();' . "\n";
+		$output = 'TopFloor.Cds.initialize();' . "\n";
 
-		$output .= $this->commands->execute();
+		if (!empty($this->page)) {
+			$output .= $this->page->execute();
+		}
 
-		return $output;
+		$output .= $this->components->execute();
+
+		return sprintf($template, $output);
+	}
+
+    public function output() {
+		if (!empty($this->page)) {
+			return $this->page->output();
+		}
+
+		return '';
+    }
+
+    public function sidebarOutput() {
+		if (!empty($this->page)) {
+			return $this->page->sidebarOutput();
+		}
+
+		return '';
+    }
+
+	public function pageTitle() {
+		$title = '';
+
+		if (!empty($this->page)) {
+			$title = $this->page->pageTitle();
+		}
+
+		return $title;
+	}
+
+	public function slugify($input) {
+		preg_match_all('!([A-Z][A-Z0-9]*(?=$|[A-Z][a-z0-9])|[A-Za-z][a-z0-9]+)!', $input, $matches);
+		$ret = $matches[0];
+
+		foreach ($ret as &$match) {
+			$match = $match == strtoupper($match) ? strtolower($match) : lcfirst($match);
+		}
+
+		return implode('-', $ret);
 	}
 }

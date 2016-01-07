@@ -8,9 +8,6 @@
 
 namespace TopFloor\Cds;
 
-
-use TopFloor\Cds\CdsService;
-
 class CdsCategoryInfo {
 	/** @var CdsService $service */
 	private $service;
@@ -25,6 +22,8 @@ class CdsCategoryInfo {
 		$categoryId = $urlHandler->get('cid');
 		if (empty($categoryId)) {
 			$categoryId = 'root';
+		} elseif ($categoryId == 'product') {
+			$categoryId = null;
 		}
 
 		return $categoryId;
@@ -54,11 +53,7 @@ class CdsCategoryInfo {
 
 		$urlHandler = $this->service->getUrlHandler();
 
-		if (!isset($categoryInfo['children']) || $categoryInfo['children'] === 0) {
-			return false;
-		}
-
-		return $urlHandler->parameterIsSet('filter');
+		return (empty($categoryInfo['children']) || $urlHandler->parameterIsSet('filter'));
 	}
 
 	public function categoryTitle($category = null) {

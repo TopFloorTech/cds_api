@@ -1,0 +1,10 @@
+<table id="{{ tableId }}" class="{{ tableClass }}">
+    <tbody>
+    {% for attribute in attributes %}
+        <tr class="cds-{{ cycle(['odd', 'even'], loop.index0) }}">
+            <td id="cds-al-{{ attribute.cleanId }}">{{ attribute.label }}</td>
+            <td id="cds-av-{{ attribute.cleanId }}">{{ attribute.value }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>

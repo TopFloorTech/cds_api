@@ -1,0 +1,43 @@
+{% extends "layouts/main.html" %}
+{% block content %}
+<div id="{{ searchContainerId }}" class="{{ searchContainerClass }}">
+    <div class="{{ searchHeaderClass }}">
+        {% if category.searchImageURL %}
+            <img src="{{ category.searchImageURL }}">
+        {% endif %}
+
+        {% if category.searchHeaderHTML %}
+            <p>{{ category.searchHeaderHTML }}</p>
+        {% elseif category.description %}
+            <p>{{ category.description }}</p>
+        {% endif %}
+    </div>
+
+    {% if loadProducts %}
+        <div id="{{ productContainerId }}">
+            <div id="{{ productLoadingContainerId }}">
+                <img src="{{ productLoadingImageSrc }}">
+                <div>Loading products...</div>
+            </div>
+        </div>
+    {% else %}
+        <ul class="{{ browseListClass }}">
+            {% for child in category.children %}
+                <li>
+                    <a href="{{ child.categoryUrl }}">
+                        {% if child.browseImageURL %}
+                            <img src="{{ child.browseImageURL }}"{{ child.imageAttributes }}>
+                        {% endif %}
+
+                        <h3>{{ child.label }}</h3>
+
+                        {% if child.description %}
+                            <p>{{ child.description }}</p>
+                        {% endif %}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</div>
+{% endblock %}
