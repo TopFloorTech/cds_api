@@ -11,4 +11,14 @@ namespace TopFloor\Cds\CdsReferences;
 
 interface CdsReferenceInterface {
   static function getReference($referenceType, $cdsId);
+
+  static function referenceTypeExists($referenceType);
+
+  public function hasLink();
+
+  public function getUrl();
+
+  public function getLabel();
+
+  public function render();
 }
