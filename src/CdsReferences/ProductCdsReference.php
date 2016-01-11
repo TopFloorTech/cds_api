@@ -31,6 +31,6 @@ class ProductCdsReference extends CacheableCdsReference {
 
     $product = $request->process();
 
-    $this->label = $product['description'];
+    return $product['description'];
   }
 }
