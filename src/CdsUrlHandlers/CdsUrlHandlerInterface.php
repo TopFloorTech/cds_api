@@ -9,9 +9,9 @@
 namespace TopFloor\Cds\CdsUrlHandlers;
 
 interface CdsUrlHandlerInterface {
-	public function construct($parameters = array());
+	public function construct($parameters = array(), $append = null, $basePath = null);
 
-	public function deconstruct($url);
+	public function deconstruct($url, $basePath = null);
 
 	public function get($parameter);
 
@@ -19,7 +19,7 @@ interface CdsUrlHandlerInterface {
 
 	public function getPageFromUri($uri = null, $basePath = null);
 
-	public function getUriForPage($page, $basePath = null);
+	public function getAliasForPage($page);
 
 	public function parameterIsSet($parameter);
 }

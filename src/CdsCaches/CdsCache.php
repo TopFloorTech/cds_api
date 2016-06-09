@@ -11,13 +11,15 @@ namespace TopFloor\Cds\CdsCaches;
 
 abstract class CdsCache implements CdsCacheInterface
 {
-    abstract function &get($key);
+    abstract function get($key, $permanent = false);
 
-    abstract function set($key, &$value);
+    abstract function set($key, &$value, $permanent = false);
 
-    public function exists($key) {
-        $value = $this->get($key);
+    public function exists($key, $permanent = false) {
+        $value = $this->get($key, $permanent);
 
         return (!empty($value));
     }
+
+    abstract function clear($key = null, $wildcard = true);
 }

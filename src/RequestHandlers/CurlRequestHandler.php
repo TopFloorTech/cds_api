@@ -8,13 +8,15 @@
 
 namespace TopFloor\Cds\RequestHandlers;
 
-use TopFloor\Cds\CdsRequest;
+use TopFloor\Cds\CdsRequests\CdsRequest;
 use TopFloor\Cds\Exceptions\CdsServiceException;
 
 class CurlRequestHandler extends RequestHandler {
 
 	public function send(CdsRequest $request) {
-		$host = $this->service->getHost();
+		$config = $this->service->getConfig();
+
+		$host = $config->host();
 		$parser = $request->getResponseParser();
 		$resource = $request->getResource();
 

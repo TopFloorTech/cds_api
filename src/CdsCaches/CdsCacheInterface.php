@@ -11,9 +11,11 @@ namespace TopFloor\Cds\CdsCaches;
 
 interface CdsCacheInterface
 {
-    public function &get($key);
+    public function get($key, $permanent = false);
 
-    public function set($key, &$value);
+    public function set($key, &$value, $permanent = false);
 
-    public function exists($key);
+    public function exists($key, $permanent = false);
+
+    public function clear($key = null, $wildcard = true);
 }

@@ -10,7 +10,7 @@ use TopFloor\Cds\CdsCaches\CdsCache;
 class StaticCdsCache extends CdsCache {
     protected static $cache = array();
 
-    public function &get($key)
+    public function get($key, $permanent = false)
     {
         if (!isset(self::$cache[$key])) {
             return null;
@@ -19,8 +19,23 @@ class StaticCdsCache extends CdsCache {
         return self::$cache[$key];
     }
 
-    public function set($key, &$value)
+    public function set($key, &$value, $permanent = false)
     {
         self::$cache[$key] = &$value;
+    }
+
+    function clear($key = null, $wildcard = true)
+    {
+        if ($wildcard) {
+            $copy = self::$cache;
+
+            foreach ($copy as $cacheKey => $value) {
+                if (strpos($cacheKey, $key) === 0) {
+                    unset(self::$cache[$cacheKey]);
+                }
+            }
+        } elseif (!is_null($key)) {
+            unset(self::$cache[$key]);
+        }
     }
 }

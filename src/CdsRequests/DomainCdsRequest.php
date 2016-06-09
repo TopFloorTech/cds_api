@@ -9,11 +9,11 @@
 namespace TopFloor\Cds\CdsRequests;
 
 
-class DomainCdsRequest extends CdsRequest {
+class DomainCdsRequest extends CacheableCdsRequest {
   public function getResource() {
     $config = $this->service->getConfig();
     $domain = $config->domain();
-    $unitSystem = $config->unitSystem();
+    $unitSystem = $this->service->getUrlHandler()->getUnitSystem();
 
     $template = '/catalog3/service?o=domain&d=%s&unit=%s';
 

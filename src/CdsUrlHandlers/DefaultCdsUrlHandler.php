@@ -11,18 +11,36 @@ namespace TopFloor\Cds\CdsUrlHandlers;
 class DefaultCdsUrlHandler extends CdsUrlHandler {
 	protected $defaultPage = 'search';
 
-	public function construct($parameters = array(), $append = '') {
-		$url = '';
+	public function construct($parameters = array(), $append = null, $basePath = null) {
+		if (is_null($append)) {
+			$append = '';
+		}
+
+		if (is_null($basePath)) {
+			$basePath = '';
+		}
+
+		$parameters = $this->buildParameters($parameters);
+
+		$url = $basePath;
 
 		foreach ($parameters as $key => $value) {
-			$url .= '&' . urlencode($key) . '=' . urlencode($value);
+			$url .= (strpos($url, '?') === false) ? '?' : '&';
+
+			$url .= urlencode($key) . '=' . urlencode($value);
 		}
 
 		return $url . $append;
 	}
 
-	public function deconstruct($url) {
+	public function deconstruct($url, $basePath = null) {
 		$parameters = array();
+
+		if (!is_null($basePath)) {
+			if (substr($url, 0, strlen($basePath)) == $basePath) {
+				$url = substr($url, strlen($basePath));
+			}
+		}
 
 		parse_str($url, $parameters);
 
@@ -44,12 +62,14 @@ class DefaultCdsUrlHandler extends CdsUrlHandler {
 		return '';
 	}
 
-	public function getUriForPage($page, $basePath = null)
+	public function getAliasForPage($page, $basePath = null)
 	{
-		$uri = $this->construct(array('page' => $page));
+		$aliases = $this->service->getConfig()->get('aliases');
 
-		$uri = $basePath . $uri;
+		$type = $this->pageAliases[$page];
 
-		return $uri;
+		$alias = $aliases[$type];
+
+		return $alias;
 	}
 }

@@ -11,6 +11,14 @@ namespace TopFloor\Cds\CdsConfigs;
 
 abstract class CdsConfig implements CdsConfigInterface {
 
+  public function __construct() {
+    $this->initialize();
+  }
+
+  protected function initialize() {
+    // Override as needed
+  }
+
   public abstract function get($key);
 
   public function cdsPath() {
@@ -26,11 +34,11 @@ abstract class CdsConfig implements CdsConfigInterface {
   }
 
   public function host() {
-    return $this->get('cdsHost');
+    return $this->get('host');
   }
 
   public function domain() {
-    return $this->get('cdsDomain');
+    return $this->get('domain');
   }
 
   public function unitSystem() {

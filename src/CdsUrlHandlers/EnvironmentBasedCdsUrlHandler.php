@@ -10,21 +10,41 @@ namespace TopFloor\Cds\CdsUrlHandlers;
 
 abstract class EnvironmentBasedCdsUrlHandler extends PrettyCdsUrlHandler
 {
-    public function construct($parameters = array(), $append = '', $baseUri = null)
+    public function construct($parameters = array(), $append = null, $basePath = null)
     {
         $parameters = $this->buildParameters($parameters);
 
-        $url = $this->getUriForPage($parameters['page'], $baseUri);
+        $uri = '/';
 
-        if (!empty($parameters['cid'])) {
-            $url .= '/' . $parameters['cid'];
+        if (is_null($append)) {
+            $append = '';
         }
 
-        if (!empty($parameters['id'])) {
-            $url .= '/' . $parameters['id'];
+        if (is_null($basePath)) {
+            $basePath = $this->getCurrentEnvironment();
         }
 
-        return $url . $append;
+        $alias = $this->getAliasForPage($parameters['page']);
+        $alias = $this->standardizeAlias($alias, $basePath, $parameters);
+
+        $uri .= $alias;
+
+        return $uri . $append;
+    }
+
+    public function standardizeAlias($alias, $baseUri = null, $parameters = array(), $baseCategory = null)
+    {
+        if (is_null($baseUri)) {
+            $baseUri = $this->getCurrentEnvironment();
+        }
+
+        if (is_null($baseCategory) && $baseUri) {
+            $environments = $this->getEnvironments();
+
+            $baseCategory = isset($environments[$baseUri]) ? $environments[$baseUri] : null;
+        }
+
+        return parent::standardizeAlias($alias, $baseUri, $parameters, $baseCategory);
     }
 
     public function deconstruct($url, $basePath = null)
@@ -34,25 +54,12 @@ abstract class EnvironmentBasedCdsUrlHandler extends PrettyCdsUrlHandler
         }
 
         if (is_null($basePath)) {
-            $basePath = false;
-
-            foreach ($this->getEnvironments() as $envBasePath => $envCategoryId) {
-                if ($url == $envBasePath
-                  || $url == $envBasePath . '/'
-                  || preg_match('|^' . $envBasePath . '/|', $url) !== false) {
-                    $basePath = $envBasePath;
-
-                    break;
-                }
-            }
+            $basePath = $this->getBasePath($url);
         }
 
         $parameters = array();
 
         if ($basePath) {
-            $parameters['page'] = $this->getPageFromUri($url, $basePath);
-            $parameters['cid'] = $this->getBaseCategoryId($basePath);
-
             // Remove base path from URL
             $url = substr($url, strlen($basePath));
 
@@ -71,20 +78,10 @@ abstract class EnvironmentBasedCdsUrlHandler extends PrettyCdsUrlHandler
                 $url = substr($url, 0, strlen($url) - 1);
             }
 
-            $pathParts = explode('/', $url);
+            $entity = $this->getEntityFromUri($url, $basePath);
 
-            if (count($pathParts) > 0) {
-                if (array_search($pathParts[0], $this->pagePrefixes)) {
-                    array_shift($pathParts);
-                }
-            }
-
-            if (!empty($pathParts[0])) {
-                $parameters['cid'] = $pathParts[0];
-            }
-
-            if (!empty($pathParts[1])) {
-                $parameters['id'] = $pathParts[1];
+            if ($entity) {
+                $parameters += $entity->getParameters();
             }
         }
 
@@ -93,35 +90,65 @@ abstract class EnvironmentBasedCdsUrlHandler extends PrettyCdsUrlHandler
 
     protected abstract function getEnvironments();
 
-    public function getPageFromUri($uri = null, $baseUri = null) {
-        if (empty($baseUri)) {
-            $baseUri = $this->getCurrentEnvironment();
+    protected function getBasePath($uri) {
+        $basePath = null;
+
+        foreach ($this->getEnvironments() as $envBasePath => $envCategoryId) {
+            if ($uri == $envBasePath
+                || $uri == $envBasePath . '/'
+                || preg_match('|^' . $envBasePath . '/|', $uri) !== false) {
+                $basePath = $envBasePath;
+
+                break;
+            }
+        }
+
+        return $basePath;
+    }
+
+    public function getIdFromUri($uri = null, $baseUri = null) {
+        $uri = $this->standardizeUri($uri, $baseUri, false);
+
+        if (is_null($baseUri)) {
+            $baseUri = $this->getBasePath($uri);
 
             if (empty($baseUri)) {
                 return '';
             }
         }
 
+        $environments = $this->getEnvironments();
+
+        if (empty($uri) && array_key_exists($baseUri, $environments)) {
+            return $environments[$baseUri];
+        }
+
+        return parent::getIdFromUri($uri, $baseUri);
+    }
+
+    public function getPageFromUri($uri = null, $baseUri = null) {
+        if (empty($baseUri)) {
+            $baseUri = $this->getCurrentEnvironment();
+        }
+
         return parent::getPageFromUri($uri, $baseUri);
     }
 
-    public function getUriForPage($page, $basePath = null) {
+    public function inProductSection() {
+        return ($this->getCurrentEnvironment());
+    }
+
+    public function buildParameters($parameters = array(), $basePath = null) {
+        if (is_string($parameters)) {
+            $parameters = $this->parseQueryString($parameters);
+        }
+
         if (is_null($basePath)) {
             $basePath = $this->getCurrentEnvironment();
         }
 
-        return parent::getUriForPage($page, $basePath);
-    }
-
-    public function buildParameters($parameters = array()) {
-        $basePath = $this->getCurrentEnvironment();
-
-        if ($basePath !== false) {
-            $baseCategoryId = $this->getBaseCategoryId($basePath);
-
-            if (!isset($parameters['cid'])) {
-                $parameters['cid'] = $baseCategoryId;
-            }
+        if ($basePath !== false && !isset($parameters['cid'])) {
+            $parameters['cid'] = $this->getBaseCategoryId($basePath);;
         }
 
         return parent::buildParameters($parameters);
@@ -146,12 +173,18 @@ abstract class EnvironmentBasedCdsUrlHandler extends PrettyCdsUrlHandler
         return (preg_match('|^' . $basePath . '\/|', $requestUri));
     }
 
-    public function getCurrentEnvironment()
+    public function getCurrentEnvironment($fallbackToDefault = false)
     {
-        foreach ($this->getEnvironments() as $basePath => $categoryId) {
+        $environments = $this->getEnvironments();
+
+        foreach ($environments as $basePath => $categoryId) {
             if ($this->environmentIsActive($basePath)) {
                 return $basePath;
             }
+        }
+
+        if ($fallbackToDefault && !empty($environments)) {
+            return array_keys($environments)[0];
         }
 
         return false;
@@ -188,5 +221,15 @@ abstract class EnvironmentBasedCdsUrlHandler extends PrettyCdsUrlHandler
         }
 
         return '';
+    }
+
+    public function getEnvironmentCategoryId($basePath) {
+        $environments = $this->getEnvironments();
+
+        if (!array_key_exists($basePath, $environments)) {
+            return false;
+        }
+
+        return $environments[$basePath];
     }
 }

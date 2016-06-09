@@ -9,8 +9,8 @@
 namespace TopFloor\Cds\CdsRequests;
 
 
-class CategoryCdsRequest extends CdsRequest {
-  protected $categoryId = 'root';
+class CategoryCdsRequest extends CacheableCdsRequest {
+  protected $categoryId = null;
 
   public function setCategory($categoryId) {
     $this->categoryId = $categoryId;
@@ -23,10 +23,18 @@ class CategoryCdsRequest extends CdsRequest {
   public function getResource() {
     $config = $this->service->getConfig();
     $domain = $config->domain();
-    $unitSystem = $config->unitSystem();
+    $unitSystem = $this->service->getUrlHandler()->getUnitSystem();
 
-    $template = '/catalog3/service?o=category&d=%s&cid=%s&unit=%s';
+    $template = '/catalog3/service?o=category&d=%s&unit=%s';
 
-    return sprintf($template, $domain, $this->getCategory(), $unitSystem);
+    $output = sprintf($template, $domain, $unitSystem);
+
+    $categoryId = $this->getCategory();
+
+    if (!is_null($categoryId)) {
+      $output .= '&cid=' . $categoryId;
+    }
+
+    return $output;
   }
 }

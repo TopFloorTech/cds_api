@@ -9,7 +9,7 @@
 namespace TopFloor\Cds\CdsRequests;
 
 
-class ProductsCdsRequest extends CdsRequest {
+class ProductsCdsRequest extends CacheableCdsRequest {
   protected $categoryId = 'root';
 
   protected $productsPerPage = 15;
@@ -43,7 +43,7 @@ class ProductsCdsRequest extends CdsRequest {
   public function getResource() {
     $config = $this->service->getConfig();
     $domain = $config->domain();
-    $unitSystem = $config->unitSystem();
+    $unitSystem = $this->service->getUrlHandler()->getUnitSystem();
 
     $template = '/catalog3/service?o=fsearch&d=%s&cid=%s&unit=%s&page=%s&ppp=%s';
 

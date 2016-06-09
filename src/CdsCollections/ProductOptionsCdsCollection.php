@@ -6,9 +6,11 @@
  * Time: 12:18 AM
  */
 
-namespace TopFloor\Cds\SelectOptions;
+namespace TopFloor\Cds\CdsCollections;
 
-class ProductCdsSelectOptions extends CacheableCdsSelectOptions {
+class ProductOptionsCdsCollection extends CacheableCdsCollection {
+
+  protected $permanent = true;
 
   public function getCacheKey() {
     return 'select-options-product';
@@ -17,7 +19,7 @@ class ProductCdsSelectOptions extends CacheableCdsSelectOptions {
   public function loadData() {
     $options = array();
 
-    $perPage = 100;
+    $perPage = 250;
     $page = 0;
 
     $request = $this->service->productsRequest('root', $page, $perPage);

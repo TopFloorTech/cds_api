@@ -9,7 +9,7 @@
 namespace TopFloor\Cds\CdsRequests;
 
 
-class ProductCdsRequest extends CdsRequest {
+class ProductCdsRequest extends CacheableCdsRequest {
   protected $productId;
   protected $categoryId = null;
 
@@ -33,7 +33,7 @@ class ProductCdsRequest extends CdsRequest {
     $config = $this->service->getConfig();
     $domain = $config->domain();
     $category = $this->getCategory();
-    $unitSystem = $config->unitSystem();
+    $unitSystem = $this->service->getUrlHandler()->getUnitSystem();
 
     $template = '/catalog3/service?o=product&d=%s&id=%s&unit=%s';
     if (!is_null($category)) {

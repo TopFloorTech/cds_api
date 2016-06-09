@@ -8,7 +8,7 @@
 
 namespace TopFloor\Cds\RequestHandlers;
 
-use TopFloor\Cds\CdsRequest;
+use TopFloor\Cds\CdsRequests\CdsRequest;
 
 interface RequestHandlerInterface {
 	public function send(CdsRequest $request);

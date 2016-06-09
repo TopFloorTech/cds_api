@@ -20,7 +20,9 @@ abstract class CacheableCdsRequest extends CdsRequest {
     } else {
       $result = parent::process();
 
-      $cache->set($cacheKey, $result);
+      if (!empty($result)) {
+        $cache->set($cacheKey, $result);
+      }
     }
 
     return $result;

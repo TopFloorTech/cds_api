@@ -6,20 +6,27 @@
  * Time: 12:00 AM
  */
 
-namespace TopFloor\Cds\SelectOptions;
+namespace TopFloor\Cds\CdsCollections;
 
 
 use TopFloor\Cds\CdsService;
 use TopFloor\Cds\Exceptions\CdsServiceException;
 
-class CdsSelectOptions implements CdsSelectOptionsInterface {
+class CdsCollection implements CdsCollectionInterface {
   protected $service;
 
-  protected static $types = array(
-    'product' => '\\TopFloor\\Cds\\SelectOptions\\ProductSelectOptions',
-    'category' => '\\TopFloor\\Cds\\SelectOptions\\CategorySelectOptions',
+  public static $types = array(
+    'productOptions' => '\\TopFloor\\Cds\\CdsCollections\\ProductOptionsCdsCollection',
+    'categories' => '\\TopFloor\\Cds\\CdsCollections\\CategoriesCdsCollection',
+    'categoryOptions' => '\\TopFloor\\Cds\\CdsCollections\\CategoryOptionsCdsCollection',
   );
 
+  /**
+   * @param $type
+   * @param \TopFloor\Cds\CdsService $service
+   * @return CdsCollection
+   * @throws \TopFloor\Cds\Exceptions\CdsServiceException
+   */
   public static function create($type, CdsService $service) {
     if (!self::typeExists($type)) {
       throw new CdsServiceException("Select options type $type doesn't exist.");
@@ -34,11 +41,17 @@ class CdsSelectOptions implements CdsSelectOptionsInterface {
     return (array_key_exists($type, self::$types));
   }
 
-  public function __construct(CdsService $service) {
+  protected function __construct(CdsService $service) {
     $this->service = $service;
+
+    $this->initialize();
   }
 
-  public function getOptions() {
+  protected function initialize() {
+    // Override if needed
+  }
+
+  public function getItems() {
     $options = $this->loadData();
 
     return $options;
